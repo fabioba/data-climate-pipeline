@@ -4,10 +4,10 @@
 - [Business Context](#business_context)
 - [Data Sources](#data_sources)
 - [System Design](#system_design)
-- [System Design - Data Ingestion](#system_design_data_ingestion)
-- [System Design - Data Lake](#system_design_data_lake)
-- [System Design - Data Transformation/Loading](#system_design_data_transformation)
-- [System Design - Data Warehouse](#system_design_data_warehouse)
+      * [System Design - Data Ingestion](#system_design_data_ingestion)
+      * [System Design - Data Lake](#system_design_data_lake)
+      * [System Design - Data Transformation/Loading](#system_design_data_transformation)
+      * [System Design - Data Warehouse](#system_design_data_warehouse)
 
 
 <a name="business_context"/>
