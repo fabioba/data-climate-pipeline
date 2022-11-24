@@ -29,8 +29,8 @@ Eventually, this is the core question:
 <a name="data_sources"/>
 
 ## Data Sources
-* `air pollution`: https://www.kaggle.com/datasets/pavan9065/air-pollution 
-* `temperature`: https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data?resource=download 
+* `air pollution`: https://www.kaggle.com/datasets/programmerrdai/outdoor-air-pollution
+* `temperature`: https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data?resource=download&select=GlobalLandTemperaturesByCountry.csv
 * `population`: https://www.kaggle.com/datasets/imdevskp/world-population-19602018?select=population_total_long.csv 
 
 <a name="system_design"/>
@@ -48,6 +48,7 @@ The goal of this step is to ingest the data from the data sources and break it d
 ### System Design - Data Lake
 Below there's the folder structure of the data lake on S3:
 ```
+bucket: data-climate
 │
 ├── air_pollution/
 │     └── air_pollution_date=DD/MM/YYYY
@@ -60,8 +61,11 @@ Below there's the folder structure of the data lake on S3:
 <a name="system_design_data_transformation"/>
 
 ### System Design - Data Transformation/Loading
+This steps is responsible for cleaning, transforming and loading data into datawarehouse.
+
 
 <a name="system_design_data_warehouse"/>
 
 ### System Design - Data Warehouse
+![alt](docs/images/er.drawio.png)
 

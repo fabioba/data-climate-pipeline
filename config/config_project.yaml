@@ -1,0 +1,10 @@
+DATA_SOURCE:
+  POPULATION_DATA:
+    INPUT_PATH: 's3a://data-climate/population_total.csv'
+    OUTPUT_PATH: 's3a://data-climate/population'
+  AIR_POLLUTION_DATA:
+    INPUT_PATH: 's3a://data-climate/air_pollution.csv'
+    OUTPUT_PATH: 's3a://data-climate/air_pollution'
+  TEMPERATURE_DATA:
+    INPUT_PATH: 's3a://data-climate/temperature.csv'
+    OUTPUT_PATH: 's3a://data-climate/temperature'
