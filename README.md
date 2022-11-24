@@ -46,6 +46,7 @@ bucket: data-climate
 └── country.csv
 ```
 
+
 <a name="system_design_data_transformation"/>
 
 ### System Design - Data Transformation/Loading
@@ -59,5 +60,6 @@ Before running the pipeline, make sure to create connections to AWS from `Airflo
 <a name="system_design_data_warehouse"/>
 
 ### System Design - Data Warehouse
+
 ![alt](docs/images/er.drawio.png)
 
