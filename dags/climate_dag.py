@@ -17,7 +17,7 @@ from operators.load_dimension import LoadDimensionOperator
 from operators.load_fact import LoadFactOperator
 from operators.data_quality import DataQualityOperator
 
-from helpers import SqlQueries
+from operators.helpers.sql_queries import SqlQueries
 
 import logging 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
@@ -62,120 +62,61 @@ with DAG('climate_dag',
         sql = 'sql_queries/create_tables.sql'
     )    
 
-    # copy data from S3 to redshift
-    stage_temperature_to_redshift = StageToRedshiftOperator(
-        task_id='stage_temperature',
-        dag=dag,
-        redshift_conn_id = "redshift",
-        aws_credentials_id="aws_credentials",
-        table="temperature_stage",
-        s3_path = 's3a://data-climate/temperature.csv',
-        region= 'us-west-2'
-    )
+    with TaskGroup(group_id='load_stage_tables') as load_stage_tables:
+        # copy data from S3 to redshift
+        stage_country_to_redshift = StageToRedshiftOperator(
+            task_id='stage_country',
+            dag=dag,
+            redshift_conn_id = "redshift",
+            aws_credentials_id="aws_credentials",
+            table="country_stage",
+            s3_path = 's3a://data-climate/country.csv',
+            region= 'us-west-2'
+        )
 
-    stage_air_pollution_to_redshift = StageToRedshiftOperator(
-        task_id='stage_air_pollution',
-        dag=dag,
-        redshift_conn_id = "redshift",
-        aws_credentials_id="aws_credentials",
-        table="air_pollution_stage",
-        s3_path = 's3a://data-climate/air_pollution.csv',
-        region= 'us-west-2'
-    )
+        stage_air_pollution_to_redshift = StageToRedshiftOperator(
+            task_id='stage_air_pollution',
+            dag=dag,
+            redshift_conn_id = "redshift",
+            aws_credentials_id="aws_credentials",
+            table="air_pollution_stage",
+            s3_path = 's3a://data-climate/air_pollution.csv',
+            region= 'us-west-2'
+        )
 
-    stage_population_to_redshift = StageToRedshiftOperator(
-        task_id='stage_population',
-        dag=dag,
-        redshift_conn_id = "redshift",
-        aws_credentials_id="aws_credentials",
-        table="population_stage",
-        s3_path = 's3a://data-climate/population.csv',
-        region= 'us-west-2'
-    )
-
-    # create fact table from staging tables
-    load_songplays_table = LoadFactOperator(
-        task_id='load_songplays_fact_table',
-        dag=dag,
-        table = "songplays",
-        sql = SqlQueries.songplay_table_insert,
+    # load dimension tables
+    load_country_dimension_table = LoadDimensionOperator(
+        task_id='load_country_dim_table',
+        sql = SqlQueries.country_table_insert,
         redshift_conn_id = "redshift"
     )
 
 
-    with TaskGroup(group_id='load_dimension_tables') as load_dimension_tables:
-        # load dimension tables
-        load_user_dimension_table = LoadDimensionOperator(
-            task_id='load_user_dim_table',
-            table = "users",
-            sql = SqlQueries.user_table_insert,
-            redshift_conn_id = "redshift"
-        )
-
-        load_song_dimension_table = LoadDimensionOperator(
-            task_id='load_song_dim_table',
-            table = "songs",
-            sql = SqlQueries.song_table_insert,
-            redshift_conn_id = "redshift"
-        )
-
-        load_artist_dimension_table = LoadDimensionOperator(
-            task_id='load_artist_dim_table',
-            table = "artists",
-            sql = SqlQueries.artist_table_insert,
-            redshift_conn_id = "redshift"
-        )
-
-        load_time_dimension_table = LoadDimensionOperator(
-            task_id='load_time_dim_table',
-            table = "time",
-            sql = SqlQueries.time_table_insert,
-            redshift_conn_id = "redshift"
-        )
-
-
+    # create fact table from staging tables
+    load_air_pollution = LoadFactOperator(
+        task_id='load_air_pollution_table',
+        dag=dag,
+        sql = SqlQueries.insert_air_pollution,
+        redshift_conn_id = "redshift"
+    )
 
     with TaskGroup(group_id='data_quality_check') as data_quality_check:
         # data quality checks
-        artists_data_quality_checks = DataQualityOperator(
-            task_id='artists_data_quality_checks',
-            table = "artists",
-            col_name = "artist_id",
+        country_data_quality_checks = DataQualityOperator(
+            task_id='country_data_quality_checks',
+            table = "country",
+            col_name = "country_name",
             redshift_conn_id = "redshift"
         )
 
-        songplays_data_quality_checks = DataQualityOperator(
-            task_id='songplays_data_quality_checks',
-            table = "songplays",
-            col_name = "playid",
+        air_pollution_data_quality_checks = DataQualityOperator(
+            task_id='air_pollution_data_quality_checks',
+            table = "air_pollution",
+            col_name = "air_pollution_index",
             redshift_conn_id = "redshift"
         )
-
-        songs_data_quality_checks = DataQualityOperator(
-            task_id='songs_data_quality_checks',
-            table = "songs",
-            col_name = "songid",
-            redshift_conn_id = "redshift"
-        )
-
-
-        time_data_quality_checks = DataQualityOperator(
-            task_id='time_data_quality_checks',
-            table = "time",
-            col_name = "start_time",
-            redshift_conn_id = "redshift"
-        )
-
-
-        users_data_quality_checks = DataQualityOperator(
-            task_id='users_data_quality_checks',
-            table = "users",
-            col_name = "userid",
-            redshift_conn_id = "redshift")
-
-
 
     end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
 
 
-start_operator >> [stage_events_to_redshift, stage_songs_to_redshift] >> load_songplays_table >> load_dimension_tables >> data_quality_check >> end_operator
+start_operator >> create_table >> load_stage_tables >> load_country_dimension_table >> load_air_pollution >> data_quality_check >> end_operator

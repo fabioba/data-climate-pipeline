@@ -17,13 +17,11 @@ class LoadFactOperator(BaseOperator):
     @apply_defaults
     def __init__(self,
                 sql = "",
-                table = "",
                  redshift_conn_id="",
                  *args, **kwargs):
 
         super(LoadFactOperator, self).__init__(*args, **kwargs)
         self.sql = sql
-        self.table = table
         self.redshift_conn_id = redshift_conn_id
 
     def execute(self, context):

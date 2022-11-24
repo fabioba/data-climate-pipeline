@@ -19,14 +19,12 @@ class LoadDimensionOperator(BaseOperator):
 
     @apply_defaults
     def __init__(self,
-                table = "",
                 sql = "",
                  redshift_conn_id="",
                  *args, **kwargs):
 
         super(LoadDimensionOperator, self).__init__(*args, **kwargs)
         self.sql = sql
-        self.table = table
         self.conn_id = redshift_conn_id
 
     def execute(self, context):
