@@ -66,3 +66,11 @@ Before running the pipeline, make sure to create connections to AWS from `Airflo
 
 ![alt](docs/images/er.drawio.png)
 
+
+# Business Questions for the future
+* What If the data was increased by 100x?
+    * If the data was increased by 100x I could elaborate them using PySpark on a cluster, so each node will operate on a subset of the input dataset
+* What If the pipelines were run on a daily basis by 7am?
+    * In that case I would create a condition on the query to slice data based on the date_time daily basis
+* What If the database needed to be accessed by 100+ people?
+    * In that case I would enable auto scaling of the Redshift cluster to be able to scale out and scale in following users requests
