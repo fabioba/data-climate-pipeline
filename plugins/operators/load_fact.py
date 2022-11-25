@@ -36,15 +36,7 @@ class LoadFactOperator(BaseOperator):
         """
         try:
             
-            execution_date = context['ds']
-
-            self.log.info('execution_date: {}'.format(execution_date))
-
             redshift = PostgresHook(postgres_conn_id = self.redshift_conn_id)
-
-            self.sql = self.sql.format(
-                execution_date = execution_date
-                )
 
             self.log.info('self.sql: {}'.format(self.sql))
 
