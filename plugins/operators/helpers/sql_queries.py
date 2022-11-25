@@ -11,10 +11,24 @@ class SqlQueries:
 
     Attributes:
     - insert_climate(str)
+    - insert_climate_stage(str)
     - insert_temperature(str)
     - country_table_insert(str)
     """
     insert_climate = ("""
+        SELECT
+            distinct date_time,
+            avg_temperature,
+            country_name,
+            country_id,
+            max_temperature_state,
+            min_temperature_state,
+            distinct_state
+        FROM 
+            climate_stage
+    """)
+ 
+    insert_climate_stage = ("""
         SELECT
             temperature_country.date_time,
             temperature_country.avg_temperature,
@@ -39,7 +53,7 @@ class SqlQueries:
             temperature_country.country_name = climate.country_name
             and temperature_country.date_time = climate.date_time
         WHERE 
-            climate.date_time is not NULL
+            climate.state_name is NULL
         group by 
             1,2,3,4
     """)
@@ -65,8 +79,8 @@ class SqlQueries:
     insert_temperature_state = ("""
         SELECT
             distinct 
-            temperature_state_stage.date_time,
-            temperature_state_stage.avg_temperature,
+            temperature_state_stage.date_time::timestamp as date_time,
+            temperature_state_stage.avg_temperature::float as avg_temperature,
             temperature_state_stage.state_name,
             temperature_state_stage.country_name
         FROM 

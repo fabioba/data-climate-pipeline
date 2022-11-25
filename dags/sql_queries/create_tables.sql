@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS public.temperature_country_stage (
 
 
 CREATE TABLE IF NOT EXISTS public.temperature_state_stage (
-	"date_time" timestamp,
-	"avg_temperature" float,
+	"date_time" varchar,
+	"avg_temperature" varchar,
 	"state_name" varchar,
 	"country_name" varchar
 );

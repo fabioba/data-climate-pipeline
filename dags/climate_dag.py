@@ -117,7 +117,16 @@ with DAG('climate_dag',
             table = "temperature_state"
         )
 
+
     # create fact table from staging tables
+    load_climate_stage = LoadFactOperator(
+        task_id='load_climate_stage_table',
+        dag=dag,
+        sql = SqlQueries.insert_climate_stage,
+        redshift_conn_id = "redshift",
+        table = "climate_stage"
+    )
+
     load_climate = LoadFactOperator(
         task_id='load_climate_table',
         dag=dag,
@@ -161,4 +170,4 @@ with DAG('climate_dag',
 
 
 
-start_operator >> create_table >> load_stage_tables >> load_dim_tables >> load_climate >> data_quality_check >> end_operator
+start_operator >> create_table >> load_stage_tables >> load_dim_tables >> load_climate_stage >> load_climate >> data_quality_check >> end_operator

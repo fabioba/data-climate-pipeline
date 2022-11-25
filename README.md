@@ -74,9 +74,11 @@ Below there's the folder structure of the data lake on S3:
 bucket: data-climate
 │
 ├── temperature_country.csv
+├── temperature_state.parquet/
 └── country.csv
 ```
 
+`temperature_state.parquet/` is a folder that contains the partition of temperature_state.parquet original file. Since this file is very big, it's better process one chunked file at a time.
 
 <a name="system_design_data_transformation"/>
 
