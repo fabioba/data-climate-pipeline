@@ -27,23 +27,24 @@ logger = logging.getLogger(__name__)
 # AWS_KEY = os.environ.get('AWS_KEY')
 # AWS_SECRET = os.environ.get('AWS_SECRET')
 default_args = {
-    'owner': 'udacity',
+    'owner': 'fabio_barbazza',
     'depends_on_past': False,
+    'start_date': datetime.utcnow(),
     #'start_date': datetime(1953, 10, 10),
     #'end_date': datetime(2010, 1, 1),
     'email_on_failure': True,
     # retry 1 times after failure
-    'retries': 1,
+    #'retries': 1,
     'email_on_retry': False,
     # retry after 5 minutes
-    'retry_delay': timedelta(minutes=5),
+    #'retry_delay': timedelta(minutes=5),
     'catchup': False
 }
 
+
 with DAG('climate_dag',
           default_args=default_args,
-          description='ETL Climate Data',
-          schedule_interval= datetime.now()
+          description='ETL Climate Data'
         ) as dag:
 
     start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
@@ -86,7 +87,7 @@ with DAG('climate_dag',
             redshift_conn_id = "redshift",
             aws_credentials_id="aws_credentials",
             table="temperature_state_stage",
-            s3_path = 's3://data-climate/temperature_state.json',
+            s3_path = 's3://data-climate/temperature_state.parquet',
             region= 'us-west-2',
             type_data_source='json'
         )
@@ -102,16 +103,22 @@ with DAG('climate_dag',
         )
 
         # load dimension tables
-        load_temperature_dimension_table = LoadDimensionOperator(
-            task_id='load_temperature_dim_table',
-            sql = SqlQueries.insert_temperature,
+        load_temperature_country_dimension_table = LoadDimensionOperator(
+            task_id='load_temperature_country_dim_table',
+            sql = SqlQueries.insert_temperature_country,
             redshift_conn_id = "redshift",
-            table = "temperature"
+            table = "temperature_country"
+        )
+        # load dimension tables
+        load_temperature_state_dimension_table = LoadDimensionOperator(
+            task_id='load_temperature_state_dim_table',
+            sql = SqlQueries.insert_temperature_state,
+            redshift_conn_id = "redshift",
+            table = "temperature_state"
         )
 
-
     # create fact table from staging tables
-    load_temperature = LoadFactOperator(
+    load_climate = LoadFactOperator(
         task_id='load_climate_table',
         dag=dag,
         sql = SqlQueries.insert_climate,
@@ -129,9 +136,16 @@ with DAG('climate_dag',
             redshift_conn_id = "redshift"
         )
 
-        temperature_data_quality_checks = DataQualityOperator(
-            task_id='temperature_data_quality_checks',
-            table = "temperature",
+        temperature_country_data_quality_checks = DataQualityOperator(
+            task_id='temperature_country_data_quality_checks',
+            table = "temperature_country",
+            col_name = "avg_temperature",
+            redshift_conn_id = "redshift"
+        )
+
+        temperature_state_data_quality_checks = DataQualityOperator(
+            task_id='temperature_state_data_quality_checks',
+            table = "temperature_state",
             col_name = "avg_temperature",
             redshift_conn_id = "redshift"
         )
@@ -146,4 +160,5 @@ with DAG('climate_dag',
     end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
 
 
-start_operator >> create_table >> load_stage_tables >> load_dim_tables >> load_temperature >> data_quality_check >> end_operator
+
+start_operator >> create_table >> load_stage_tables >> load_dim_tables >> load_climate >> data_quality_check >> end_operator

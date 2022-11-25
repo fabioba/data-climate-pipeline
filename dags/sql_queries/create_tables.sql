@@ -49,6 +49,6 @@ CREATE TABLE IF NOT EXISTS public.temperature_state_stage (
 
 CREATE TABLE  IF NOT EXISTS public.country_stage (
 	"country_name" varchar(256),
-	"country_id" varchar(256),
+	"country_id" varchar(256)
 );
 
