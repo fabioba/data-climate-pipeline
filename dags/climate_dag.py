@@ -29,27 +29,21 @@ logger = logging.getLogger(__name__)
 default_args = {
     'owner': 'udacity',
     'depends_on_past': False,
-    'start_date': datetime(1990, 1, 12),
+    'start_date': datetime(1953, 10, 10),
+    'end_date': datetime(2010, 1, 1),
     'email_on_failure': True,
-    # retry 3 times after failure
-    'retries': 3,
+    # retry 1 times after failure
+    'retries': 1,
     'email_on_retry': False,
     # retry after 5 minutes
     'retry_delay': timedelta(minutes=5),
     'catchup': False
 }
 
-default_args = {
-    'owner': 'udacity',
-    'depends_on_past': False,
-    'start_date': datetime.now(),
-    'catchup': False
-}
-
 with DAG('climate_dag',
           default_args=default_args,
           description='ETL Climate Data',
-          schedule_interval='0 * * * *'
+          schedule_interval='0 7 * * *'
         ) as dag:
 
     start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
@@ -70,35 +64,47 @@ with DAG('climate_dag',
             redshift_conn_id = "redshift",
             aws_credentials_id="aws_credentials",
             table="country_stage",
-            s3_path = 's3a://data-climate/country.csv',
+            s3_path = 's3://data-climate/country.csv',
             region= 'us-west-2'
         )
 
-        stage_air_pollution_to_redshift = StageToRedshiftOperator(
-            task_id='stage_air_pollution',
+        stage_temperature_to_redshift = StageToRedshiftOperator(
+            task_id='stage_temperature',
             dag=dag,
             redshift_conn_id = "redshift",
             aws_credentials_id="aws_credentials",
-            table="air_pollution_stage",
-            s3_path = 's3a://data-climate/air_pollution.csv',
+            table="temperature_stage",
+            s3_path = 's3://data-climate/temperature_country.csv',
             region= 'us-west-2'
         )
 
-    # load dimension tables
-    load_country_dimension_table = LoadDimensionOperator(
-        task_id='load_country_dim_table',
-        sql = SqlQueries.country_table_insert,
-        redshift_conn_id = "redshift"
-    )
+    with TaskGroup(group_id='load_dim_tables') as load_dim_tables:
+        # load dimension tables
+        load_country_dimension_table = LoadDimensionOperator(
+            task_id='load_country_dim_table',
+            sql = SqlQueries.insert_country,
+            redshift_conn_id = "redshift",
+            table = "country"
+        )
+
+        # load dimension tables
+        load_temperature_dimension_table = LoadDimensionOperator(
+            task_id='load_temperature_dim_table',
+            sql = SqlQueries.insert_temperature,
+            redshift_conn_id = "redshift",
+            table = "temperature"
+        )
 
 
     # create fact table from staging tables
-    load_air_pollution = LoadFactOperator(
-        task_id='load_air_pollution_table',
+    load_temperature = LoadFactOperator(
+        task_id='load_climate_table',
         dag=dag,
-        sql = SqlQueries.insert_air_pollution,
-        redshift_conn_id = "redshift"
+        sql = SqlQueries.insert_climate,
+        redshift_conn_id = "redshift",
+        table = "climate"
     )
+
 
     with TaskGroup(group_id='data_quality_check') as data_quality_check:
         # data quality checks
@@ -109,14 +115,21 @@ with DAG('climate_dag',
             redshift_conn_id = "redshift"
         )
 
-        air_pollution_data_quality_checks = DataQualityOperator(
-            task_id='air_pollution_data_quality_checks',
-            table = "air_pollution",
-            col_name = "air_pollution_index",
+        temperature_data_quality_checks = DataQualityOperator(
+            task_id='temperature_data_quality_checks',
+            table = "temperature",
+            col_name = "avg_temperature",
+            redshift_conn_id = "redshift"
+        )
+
+        climate_data_quality_checks = DataQualityOperator(
+            task_id='climate_data_quality_checks',
+            table = "climate",
+            col_name = "avg_temperature",
             redshift_conn_id = "redshift"
         )
 
     end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
 
 
-start_operator >> create_table >> load_stage_tables >> load_country_dimension_table >> load_air_pollution >> data_quality_check >> end_operator
+start_operator >> create_table >> load_stage_tables >> load_dim_tables >> load_temperature >> data_quality_check >> end_operator

@@ -34,6 +34,9 @@ Eventually, this is the core question:
 ## System Design
 ![alt](docs/images/data_climate_workflow.drawio.png)
 
+The first step regards the Data Lake which is developed on S3. So, it's easy to add unstructured files on the system. For our pourpose we have CSV files with a pre-defined structured, so it's even easier to maintain them.
+Then, the data source files are handled by Airflow. The workflow developed with that tool aim to clean the data source data and populate the Data Warehouse which sits on AWS - Redshift.
+
 
 <a name="system_design_data_lake"/>
 

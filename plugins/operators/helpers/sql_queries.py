@@ -10,26 +10,49 @@ class SqlQueries:
     A class used to perform inserting statements
 
     Attributes:
-    - insert_air_pollution(str)
+    - insert_climate(str)
+    - insert_temperature(str)
     - country_table_insert(str)
     """
-    insert_air_pollution = ("""
+    insert_climate = ("""
         SELECT
-            distinct country_name,
-            year,
-            air_pollution_index
+            distinct 
+            temperature.date_time,
+            temperature.avg_temperature,
+            temperature.country_name,
+            country.country_id
         FROM 
-            air_pollution_stage
+            temperature
         LEFT JOIN 
             country
         ON 
-            air_pollution_stage.country_id = country.country_id
+            lower(temperature.country_name) = lower(country.country_name)
+        where 
+            temperature.date_time = '{execution_date}'::timestamp
+    """)
+
+    insert_temperature = ("""
+        SELECT
+            distinct 
+            temperature_stage.date_time,
+            temperature_stage.avg_temperature,
+            temperature_stage.country_name
+        FROM 
+            temperature_stage
+        LEFT JOIN 
+            temperature
+        ON 
+            temperature_stage.date_time = temperature.date_time
+        AND
+            temperature_stage.country_name = temperature.country_name
+        WHERE
+            temperature.avg_temperature is NULL
     """)
 
     # perform join to remove any duplicates
-    country_table_insert = ("""
+    insert_country = ("""
         SELECT 
-            distinct country_id, country_name
+            distinct country_stage.country_id, country_stage.country_name
         FROM 
             country_stage
         left join 
