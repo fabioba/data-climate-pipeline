@@ -29,8 +29,8 @@ logger = logging.getLogger(__name__)
 default_args = {
     'owner': 'udacity',
     'depends_on_past': False,
-    'start_date': datetime(1953, 10, 10),
-    'end_date': datetime(2010, 1, 1),
+    #'start_date': datetime(1953, 10, 10),
+    #'end_date': datetime(2010, 1, 1),
     'email_on_failure': True,
     # retry 1 times after failure
     'retries': 1,
@@ -43,7 +43,7 @@ default_args = {
 with DAG('climate_dag',
           default_args=default_args,
           description='ETL Climate Data',
-          schedule_interval='0 7 * * *'
+          schedule_interval= datetime.now()
         ) as dag:
 
     start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
@@ -68,15 +68,29 @@ with DAG('climate_dag',
             region= 'us-west-2'
         )
 
-        stage_temperature_to_redshift = StageToRedshiftOperator(
-            task_id='stage_temperature',
+        stage_temperature_country_to_redshift = StageToRedshiftOperator(
+            task_id='stage_temperature_country',
             dag=dag,
             redshift_conn_id = "redshift",
             aws_credentials_id="aws_credentials",
-            table="temperature_stage",
+            table="temperature_country_stage",
             s3_path = 's3://data-climate/temperature_country.csv',
-            region= 'us-west-2'
+            region= 'us-west-2',
+            type_data_source='csv'
         )
+
+
+        stage_temperature_state_to_redshift = StageToRedshiftOperator(
+            task_id='stage_temperature_state',
+            dag=dag,
+            redshift_conn_id = "redshift",
+            aws_credentials_id="aws_credentials",
+            table="temperature_state_stage",
+            s3_path = 's3://data-climate/temperature_state.json',
+            region= 'us-west-2',
+            type_data_source='json'
+        )
+
 
     with TaskGroup(group_id='load_dim_tables') as load_dim_tables:
         # load dimension tables

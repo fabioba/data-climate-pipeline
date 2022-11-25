@@ -17,7 +17,7 @@ class StageToRedshiftOperator(BaseOperator):
     The operator's parameters should specify where in S3 the file is loaded and what is the target table.
     """
     ui_color = '#358140'
-    copy_sql = """
+    copy_sql_from_csv = """
                 COPY {}
                 FROM '{}'
                 ACCESS_KEY_ID '{}'
@@ -25,6 +25,13 @@ class StageToRedshiftOperator(BaseOperator):
                 IGNOREHEADER 1
                 DELIMITER ';'
                 """
+    copy_sql_from_json="""
+                COPY {}
+                FROM '{}'
+                ACCESS_KEY_ID '{}'
+                SECRET_ACCESS_KEY '{}'
+                JSON '{}'
+    """
     
     @apply_defaults
     def __init__(self,
@@ -33,6 +40,7 @@ class StageToRedshiftOperator(BaseOperator):
                  table="",
                  s3_path = "",
                  region = "",
+                 type_data_source="csv",
                  *args, **kwargs):
 
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
@@ -41,6 +49,7 @@ class StageToRedshiftOperator(BaseOperator):
         self.aws_credentials_id = aws_credentials_id
         self.s3_path = s3_path
         self.region = region
+        self.type_data_source = type_data_source
 
     def execute(self, context):
         """
@@ -60,12 +69,22 @@ class StageToRedshiftOperator(BaseOperator):
 
             self.log.info('s3_path: {}'.format(self.s3_path))
 
-            formatted_sql = StageToRedshiftOperator.copy_sql.format(
-                self.table,
-                self.s3_path,
-                credentials.access_key,
-                credentials.secret_key
-            )
+            if self.type_data_source == 'csv':
+                formatted_sql = StageToRedshiftOperator.copy_sql_from_csv.format(
+                    self.table,
+                    self.s3_path,
+                    credentials.access_key,
+                    credentials.secret_key
+                )
+
+            elif self.type_data_source== 'json':
+                formatted_sql = StageToRedshiftOperator.copy_sql_from_json.format(
+                    self.table,
+                    self.s3_path,
+                    credentials.access_key,
+                    credentials.secret_key,
+                    self.s3_path
+                )
 
             self.log.info('formatted_sql: {}'.format(formatted_sql))
             
