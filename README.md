@@ -13,12 +13,12 @@
 
 ## Business Context
 The goal of this project is to analyze the relationship between:
-* `air pollution`
+* `temperature`
 * `country`
 
 These are some of the questions that it will be possible to answer:
-* What is the Country with the highest increase of `air pollution`?
-* What is the Country with the highest increase of `air pollution` over last 10 years?
+* What is the Country with the highest increase of `temperature`?
+* What is the Country with the highest increase of `temperature` over last 10 years?
 
 Eventually, this is the core question:
 * What is the best Country to live in the future?
@@ -26,7 +26,7 @@ Eventually, this is the core question:
 <a name="data_sources"/>
 
 ## Data Sources
-* `air pollution`: https://www.kaggle.com/datasets/programmerrdai/outdoor-air-pollution
+* `temperature`: https://www.kaggle.com/datasets/berkeleyearth/climate-change-earth-surface-temperature-data?resource=download&select=GlobalLandTemperaturesByCountry.csv
 * `country`: https://www.kaggle.com/datasets/programmerrdai/outdoor-air-pollution
 
 <a name="system_design"/>
@@ -45,7 +45,7 @@ Below there's the folder structure of the data lake on S3:
 ```
 bucket: data-climate
 │
-├── air_pollution.csv
+├── temperature_country.csv
 └── country.csv
 ```
 
